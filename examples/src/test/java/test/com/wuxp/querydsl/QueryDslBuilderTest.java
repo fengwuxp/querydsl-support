@@ -6,6 +6,7 @@ import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -17,15 +18,19 @@ import test.com.wuxp.querydsl.entities.QGoodsTag;
 import test.com.wuxp.querydsl.info.GoodsAndTypeInfo;
 import test.com.wuxp.querydsl.req.QueryGoodsReq;
 
+import javax.persistence.EntityManager;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Ignore
 @ExtendWith(MockitoExtension.class)
 @Slf4j
 public class QueryDslBuilderTest {
 
     @Mock
     private JPAQueryFactory queryFactory;
+
+    private EntityManager entityManager;
 
     @Test
     public void testSqlBuild() {
@@ -63,6 +68,8 @@ public class QueryDslBuilderTest {
 
 
         queryFactory.update(goods).set(goods.activityId, 1L).where().execute();
+
+//        Query nativeQuery = entityManager.createNativeQuery("");
     }
 
     @Test

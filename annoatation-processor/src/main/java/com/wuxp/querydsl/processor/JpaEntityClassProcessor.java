@@ -77,11 +77,10 @@ public class JpaEntityClassProcessor extends AbstractProcessor {
         final String newSimpleClassName = getNewSimpleClassName(element);
         TypeSpec.Builder builder = TypeSpec.classBuilder(newSimpleClassName)
                 .addModifiers(Modifier.FINAL, Modifier.PUBLIC);
+        String fullClassName = element.getQualifiedName().toString();
         TypeMirror superTypeMirror = element.getSuperclass();
         int i = 5;
-        String fullClassName = element.getQualifiedName().toString();
-        while (i > 0) {
-            i--;
+        while (i-- > 0) {
             if (superTypeMirror instanceof NoType) {
                 break;
             }
@@ -90,7 +89,8 @@ public class JpaEntityClassProcessor extends AbstractProcessor {
                 break;
             }
             TypeElement superTypeElement = (TypeElement) supperElement;
-            if (Object.class.getName().equals(superTypeElement.getQualifiedName().toString())) {
+            String superClassName = superTypeElement.getQualifiedName().toString();
+            if (Object.class.getName().equals(superClassName)) {
                 break;
             }
             if (superTypeElement.getAnnotation(MappedSuperclass.class) == null) {

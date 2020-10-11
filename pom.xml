@@ -16,6 +16,7 @@
         <module>examples</module>
         <module>annoatation-processor</module>
         <module>codegen</module>
+        <module>repository</module>
     </modules>
 
     <properties>
