@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import static com.wuxp.querydsl.annoations.AnnotationConstantVariables.DEFAULT_CONDITION_EXPR;
+import static com.wuxp.querydsl.annoations.AnnotationConstantVariables.NOT_NULL_CONDITION_EXPR;
 
 /**
  * 是否包含
@@ -28,5 +28,5 @@ public @interface Contains {
      * 该注解生效的条件
      * spel 表达式，表达式的返回值必须为boolean值
      */
-    String condition() default DEFAULT_CONDITION_EXPR;
+    String condition() default NOT_NULL_CONDITION_EXPR;
 }

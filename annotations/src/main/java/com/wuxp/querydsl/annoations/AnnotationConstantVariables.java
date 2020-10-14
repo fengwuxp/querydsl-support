@@ -1,18 +1,31 @@
 package com.wuxp.querydsl.annoations;
 
-import java.util.function.Function;
 
 /**
+ * 注解相关常量
+ *
  * @author wuxp
  */
 public final class AnnotationConstantVariables {
 
-    public static final String DEFAULT_CONDITION_EXPR = "#_val!=b=null";
+    /**
+     * 不为null生效的条件表达式
+     */
+    public static final String NOT_NULL_CONDITION_EXPR = "#_val!=null";
 
-    public static final Function DEFAULT_FUNCTION=new Function() {
-        @Override
-        public Object apply(Object o) {
-            return null;
-        }
-    };
+    /**
+     * 为null生效的条件表达式
+     */
+    public static final String NULL_CONDITION_EXPR = "#_val==null";
+
+    /**
+     * 等于true生效的条件表达式
+     */
+    public static final String TRUE_CONDITION_EXPR = "#_val==true";
+
+    /**
+     * 等于false生效的条件表达式
+     */
+    public static final String FALSE_CONDITION_EXPR = "#_val==false";
+
 }

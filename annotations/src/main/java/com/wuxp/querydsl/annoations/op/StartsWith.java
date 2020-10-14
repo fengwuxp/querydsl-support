@@ -1,7 +1,5 @@
 package com.wuxp.querydsl.annoations.op;
 
-import com.wuxp.querydsl.annoations.constant.OperateConstantVariables;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -10,17 +8,15 @@ import java.lang.annotation.Target;
 import static com.wuxp.querydsl.annoations.AnnotationConstantVariables.NOT_NULL_CONDITION_EXPR;
 
 /**
- * 查询操作标记注解，用于 ">=" 操作，可以标记在字段或方法上
- * <code>
- * xx>=#_val
- * </code>
- *
+ * 是否包含
+ * <ul>
+ *     <li>1：如果是sql 则使用like xxx%</li>
+ * </ul>
  * @author wuxp
  */
-@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
+@Target({ElementType.FIELD, ElementType.METHOD,ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-@Op(value = OperateConstantVariables.GTE)
-public @interface Gte {
+public @interface StartsWith {
 
     /**
      * 用于查询的字段的 name

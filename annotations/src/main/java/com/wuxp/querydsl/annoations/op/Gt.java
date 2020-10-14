@@ -10,17 +10,17 @@ import java.lang.annotation.Target;
 import static com.wuxp.querydsl.annoations.AnnotationConstantVariables.NOT_NULL_CONDITION_EXPR;
 
 /**
- * 查询操作标记注解，用于 ">=" 操作，可以标记在字段或方法上
+ * 查询操作标记注解，用于 ">" 操作，可以标记在字段或方法上
  * <code>
- * xx>=#_val
+ * xx=#_val
  * </code>
  *
  * @author wuxp
  */
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-@Op(value = OperateConstantVariables.GTE)
-public @interface Gte {
+@Op(value = OperateConstantVariables.GT)
+public @interface Gt {
 
     /**
      * 用于查询的字段的 name

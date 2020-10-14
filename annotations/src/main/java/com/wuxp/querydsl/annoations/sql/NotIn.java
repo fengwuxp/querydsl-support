@@ -1,6 +1,7 @@
-package com.wuxp.querydsl.annoations.op;
+package com.wuxp.querydsl.annoations.sql;
 
-import com.wuxp.querydsl.annoations.constant.OperateConstantVariables;
+import com.wuxp.querydsl.annoations.constant.SqlOperateConstantVariables;
+import com.wuxp.querydsl.annoations.op.Op;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -10,17 +11,18 @@ import java.lang.annotation.Target;
 import static com.wuxp.querydsl.annoations.AnnotationConstantVariables.NOT_NULL_CONDITION_EXPR;
 
 /**
- * 查询操作标记注解，用于 ">=" 操作，可以标记在字段或方法上
+ * 查询操作标记注解，用于 "in" 操作，可以标记在字段或方法上
  * <code>
- * xx>=#_val
+ * xx not in (#_val)
  * </code>
  *
  * @author wuxp
  */
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-@Op(value = OperateConstantVariables.GTE)
-public @interface Gte {
+@Op(SqlOperateConstantVariables.NOT_IN)
+public @interface NotIn {
+
 
     /**
      * 用于查询的字段的 name
