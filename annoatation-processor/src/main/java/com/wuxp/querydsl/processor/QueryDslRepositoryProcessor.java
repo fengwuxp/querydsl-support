@@ -68,29 +68,22 @@ public class QueryDslRepositoryProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        for (String typeName : this.getSupportedAnnotationTypes()) {
-            Class<? extends Annotation> entityAnnotationType = null;
+        for (TypeElement typeElement : annotations) {
+            String className = typeElement.getQualifiedName().toString();
             try {
-                entityAnnotationType = (Class<? extends Annotation>) Class.forName(typeName);
+                Class<? extends Annotation> entityAnnotationType = (Class<? extends Annotation>) Class.forName(className);
+                processAnnotations(roundEnv.getElementsAnnotatedWith(entityAnnotationType));
             } catch (ClassNotFoundException e) {
-                this.processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, String.format("%s  can't found class %s", getClass().getSimpleName(), typeName));
+                this.processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, String.format("%s  can't found class %s", getClass().getSimpleName(), className));
             }
-            if (entityAnnotationType == null) {
-                continue;
-            }
-            processAnnotations(roundEnv, roundEnv.getElementsAnnotatedWith(entityAnnotationType));
         }
         return false;
     }
 
 
-    protected void processAnnotations(RoundEnvironment roundEnv, Set<? extends Element> elementList) {
-        Elements elementUtils = this.processingEnv.getElementUtils();
-        Filer filer = this.processingEnv.getFiler();
-        Messager messager = this.processingEnv.getMessager();
-        Map<String, FileObject> sourceFiles = new HashMap<>();
+    protected void processAnnotations(Set<? extends Element> elementList) {
+        Map<String, FileObject> sourceFiles = new HashMap<>(64);
         for (Element element : elementList) {
-
             //只支持对类，接口，注解的处理，对字段不做处理
             if (!element.getKind().isClass() && !element.getKind().isInterface()) {
                 continue;
