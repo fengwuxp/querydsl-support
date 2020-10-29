@@ -8,6 +8,8 @@ import java.lang.annotation.Target;
 import static com.wuxp.querydsl.annoations.AnnotationConstantVariables.NOT_NULL_CONDITION_EXPR;
 
 /**
+ * 用于定义一个比较的操作
+ *
  * @author wuxp
  */
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE})

@@ -12,7 +12,7 @@ import static com.wuxp.querydsl.annoations.AnnotationConstantVariables.NOT_NULL_
 /**
  * 查询操作标记注解，用于 ">" 操作，可以标记在字段或方法上
  * <code>
- * xx=#_val
+ * xx>#_val
  * </code>
  *
  * @author wuxp

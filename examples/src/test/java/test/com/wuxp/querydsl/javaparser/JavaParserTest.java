@@ -8,11 +8,11 @@ import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.wuxp.querydsl.repositories.GoodsRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.springframework.stereotype.Component;
-import test.com.wuxp.querydsl.repositories.GoodsRepository;
 
 import java.io.File;
 import java.nio.file.Paths;
@@ -21,16 +21,6 @@ import java.util.Optional;
 @Slf4j
 public class JavaParserTest {
 
-
-    @Test
-    public void testParse01() throws Exception {
-        JavaParser javaParser = new JavaParser();
-        String pathname = "/Users/wuxp/Workspace/idea/github/querydsl-support/examples/src/test/java/test/com/wuxp/querydsl/repositories/GoodsRepository.java";
-        ParseResult<CompilationUnit> result = javaParser.parse(new File(pathname));
-        Assert.assertTrue(result.getResult().isPresent());
-        CompilationUnit compilationUnit = result.getResult().get();
-        log.info("{}", compilationUnit);
-    }
 
     @Test
     public void testParseAndCodeGen() throws Exception {
@@ -43,14 +33,15 @@ public class JavaParserTest {
         Assert.assertTrue(goodsRepository.isPresent());
 
         CompilationUnit implClass = new CompilationUnit();
-        implClass.setPackageDeclaration("test.com.wuxp.querydsl.repositories.impl");
+        implClass.setPackageDeclaration("com.wuxp.querydsl.repositories.impl");
         ClassOrInterfaceDeclaration goodsRepositoryImpl = implClass.addClass("GoodsRepositoryImpl", Modifier.Keyword.PUBLIC);
         repositoryInterface.getImports().forEach(importDeclaration -> {
             implClass.addImport(importDeclaration.getName().asString());
         });
         goodsRepositoryImpl.addImplementedType("test.com.wuxp.querydsl.repositories.GoodsRepository");
         goodsRepositoryImpl.addAnnotation(Component.class);
-        goodsRepository.get().getMethods()
+        ClassOrInterfaceDeclaration classOrInterfaceDeclaration = goodsRepository.get();
+        classOrInterfaceDeclaration.getMethods()
                 .stream()
                 .filter(methodDeclaration -> !methodDeclaration.isDefault())
                 .forEach(methodDeclaration -> {
@@ -89,7 +80,7 @@ public class JavaParserTest {
     }
 
     private String getModuleDir() {
-        String[] outPaths = {"src", "test", "java"};
+        String[] outPaths = {"src", "main", "java"};
         return Paths.get(System.getProperty("user.dir")).resolve(String.join(File.separator, outPaths)).toString();
     }
 

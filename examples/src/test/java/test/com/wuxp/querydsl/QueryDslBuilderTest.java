@@ -5,18 +5,15 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.wuxp.querydsl.entities.*;
+import com.wuxp.querydsl.info.GoodsAndTypeInfo;
+import com.wuxp.querydsl.req.QueryGoodsReq;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import test.com.wuxp.querydsl.entities.Goods;
-import test.com.wuxp.querydsl.entities.QGoods;
-import test.com.wuxp.querydsl.entities.QGoodsCategory;
-import test.com.wuxp.querydsl.entities.QGoodsTag;
-import test.com.wuxp.querydsl.info.GoodsAndTypeInfo;
-import test.com.wuxp.querydsl.req.QueryGoodsReq;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -35,6 +32,7 @@ public class QueryDslBuilderTest {
     @Test
     public void testSqlBuild() {
 
+
         //商品基本信息查询实体 子查询
         QGoods goods = QGoods.goods;
         List<Goods> goodsList = queryFactory
@@ -43,7 +41,7 @@ public class QueryDslBuilderTest {
                 .where(goods.price.eq(
                         JPAExpressions.select(goods.price.max()).from(goods)
                 ))
-//                .leftJoin(QGoodsBrand.goodsBrand)
+                .leftJoin(QGoodsBrand.goodsBrand)
                 .fetch();
         log.info("{}", goodsList);
 

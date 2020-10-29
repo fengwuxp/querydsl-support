@@ -28,4 +28,14 @@ public final class OperateConstantVariables {
      */
     public static final String GTE = ">=";
 
+    /**
+     * @see com.wuxp.querydsl.annoations.op.Lt
+     */
+    public static final String LT = "<";
+
+    /**
+     * @see com.wuxp.querydsl.annoations.op.Lt
+     */
+    public static final String LTE = "<=";
+
 }
