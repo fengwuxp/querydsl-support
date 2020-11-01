@@ -49,12 +49,6 @@ public interface CrudRepository<E, ID> extends Repository<E, ID> {
      */
     boolean existsById(ID id);
 
-    /**
-     * Returns all instances of the type.
-     *
-     * @return all entities
-     */
-    Iterable<E> findAll();
 
     /**
      * Returns all instances of the type {@code T} with the given IDs.
@@ -101,8 +95,4 @@ public interface CrudRepository<E, ID> extends Repository<E, ID> {
      */
     void deleteAll(Iterable<? extends E> entities);
 
-    /**
-     * Deletes all entities managed by the repository.
-     */
-    void deleteAll();
 }

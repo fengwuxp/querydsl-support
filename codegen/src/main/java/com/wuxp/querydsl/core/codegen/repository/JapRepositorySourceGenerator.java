@@ -9,21 +9,22 @@ import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.type.TypeParameter;
+import com.wuxp.querydsl.core.codegen.methods.DefaultJpaRepositoryMethodGenerator;
+import com.wuxp.querydsl.core.codegen.methods.JpaRepositoryMethodGenerator;
+import com.wuxp.querydsl.core.codegen.methods.RepositoryMethodAnalyzer;
+import com.wuxp.querydsl.core.codegen.model.RepositoryMethodMetadata;
 import com.wuxp.querydsl.core.codegen.soucecode.JavaSourceGenerator;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 import javax.tools.FileObject;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -51,9 +52,14 @@ public class JapRepositorySourceGenerator implements JavaSourceGenerator {
 
     private String packageName;
 
+    private final List<RepositoryMethodAnalyzer> repositoryMethodAnalyzers = new ArrayList<>();
+
+    private final JpaRepositoryMethodGenerator jpaRepositoryMethodGenerator;
+
     public JapRepositorySourceGenerator(String simpleName, FileObject fileObject) {
         this.simpleName = simpleName;
         this.fileObject = fileObject;
+        jpaRepositoryMethodGenerator = new DefaultJpaRepositoryMethodGenerator();
     }
 
     @Override
@@ -134,12 +140,8 @@ public class JapRepositorySourceGenerator implements JavaSourceGenerator {
     private List<TypeParameter> addSupperClass(ClassOrInterfaceDeclaration repositoryInterface,
                                                ClassOrInterfaceDeclaration repositoryInterfaceImpl) {
 
-        String repositorySupperClassName = "";
-        if (!StringUtils.hasText(repositorySupperClassName)) {
-            repositorySupperClassName = DEFAULT_SUPPER_REPOSITORY_CLASS;
-        }
         ClassOrInterfaceType extendClass = new ClassOrInterfaceType();
-        extendClass.setName(repositorySupperClassName);
+        extendClass.setName(DEFAULT_SUPPER_REPOSITORY_CLASS);
         repositoryInterfaceImpl.addExtendedType(extendClass);
 
         // 查找 {@link com.wuxp.querydsl.repository.JpaRepository} 类上的类型变量
@@ -172,15 +174,24 @@ public class JapRepositorySourceGenerator implements JavaSourceGenerator {
      */
     private void implementMethod(ClassOrInterfaceDeclaration goodsRepositoryImpl, MethodDeclaration methodDeclaration) {
         NodeList<Modifier> modifiers = goodsRepositoryImpl.getModifiers();
-        MethodDeclaration methodDeclarationImpl = goodsRepositoryImpl.addMethod(methodDeclaration.getName().toString(), modifiers.stream().map(com.github.javaparser.ast.Modifier::getKeyword).toArray(Modifier.Keyword[]::new));
+        MethodDeclaration methodDeclarationImpl = goodsRepositoryImpl.addMethod(methodDeclaration.getName().toString(),
+                modifiers.stream().map(Modifier::getKeyword).toArray(Modifier.Keyword[]::new));
         methodDeclarationImpl.addAndGetAnnotation(Override.class);
         methodDeclarationImpl.setType(methodDeclaration.getType());
-        methodDeclarationImpl.setParameters(methodDeclaration.getParameters());
+        NodeList<Parameter> parameters = methodDeclaration.getParameters();
+        methodDeclarationImpl.setParameters(parameters);
 
-        BlockStmt body = new BlockStmt();
-        body.addStatement("return null;");
+        // 解析方法 生成方法实现的描述元数据
+        RepositoryMethodMetadata methodMetadata = new RepositoryMethodMetadata();
+        for (RepositoryMethodAnalyzer methodAnalyzer : repositoryMethodAnalyzers) {
+            methodAnalyzer.analysis(methodDeclaration, methodMetadata);
+        }
+        // 移除参数上所有的注解
+        parameters.forEach(parameter -> {
+            parameter.setAnnotations(NodeList.nodeList());
+        });
+        jpaRepositoryMethodGenerator.generate(methodDeclarationImpl, methodMetadata);
 
-        methodDeclarationImpl.setBody(body);
     }
 
 

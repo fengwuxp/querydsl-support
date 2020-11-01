@@ -1,6 +1,9 @@
 package com.wuxp.querydsl.repository.jpa;
 
+import com.querydsl.core.types.EntityPath;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.EntityPathBase;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.JPQLQueryFactory;
 import com.wuxp.querydsl.core.domain.Pagination;
 import com.wuxp.querydsl.core.domain.UpdatePredicate;
@@ -32,7 +35,7 @@ public abstract class AbstractJpaCrudRepository<E, ID> implements JpaRepository<
 
     protected final EntityMetadata entityMetadata;
 
-    private final Map<JpaCrudMethodKey, CrudMethodMetadata> methodMetadataMap = new HashMap<>();
+//    private final Map<JpaCrudMethodKey, CrudMethodMetadata> methodMetadataMap = new HashMap<>();
 
     public AbstractJpaCrudRepository(JPQLQueryFactory jpqlQueryFactory,
                                      EntityManager entityManager,
@@ -46,12 +49,10 @@ public abstract class AbstractJpaCrudRepository<E, ID> implements JpaRepository<
     @Transactional(rollbackFor = Throwable.class)
     @Override
     public <S extends E> S save(S entity) {
-        Optional<Field> idField = this.entityMetadata.getIdField();
-        boolean isNew = !idField.isPresent() || ReflectionUtils.getField(idField.get(), entity) == null;
-        if (isNew) {
-            entityManager.persist(entity);
-        } else {
+        if (getEntityId(entity).isPresent()) {
             entityManager.merge(entity);
+        } else {
+            entityManager.persist(entity);
         }
         return entity;
     }
@@ -93,17 +94,8 @@ public abstract class AbstractJpaCrudRepository<E, ID> implements JpaRepository<
 
     @Override
     public boolean existsById(ID id) {
+
         return false;
-    }
-
-    @Override
-    public Iterable<E> findAll() {
-        return null;
-    }
-
-    @Override
-    public Iterable<E> findAllById(Iterable<ID> ids) {
-        return null;
     }
 
     @Override
@@ -111,30 +103,42 @@ public abstract class AbstractJpaCrudRepository<E, ID> implements JpaRepository<
         return 0;
     }
 
+    @Transactional(rollbackFor = Throwable.class)
     @Override
     public void deleteById(ID id) {
-
+        Assert.notNull(id, ID_MUST_NOT_BE_NULL);
+        Optional<E> optional = findById(id);
+        optional.ifPresent(entityManager::remove);
     }
 
+    @Transactional(rollbackFor = Throwable.class)
     @Override
     public void delete(E entity) {
+        Assert.notNull(entity, "Entity must not be null!");
+        Optional<Object> entityId = this.getEntityId(entity);
+        if (entityId.isPresent()) {
+            E existing = (E) entityManager.find(entity.getClass(), entityId);
+            // if the entity to be deleted doesn't exist, delete is a NOOP
+            if (existing == null) {
+                return;
+            }
+            entityManager.remove(entityManager.contains(entity) ? entity : entityManager.merge(entity));
+        } else {
+            // try remove
+            entityManager.remove(entity);
+        }
 
     }
 
+    @Transactional(rollbackFor = Throwable.class)
     @Override
     public void deleteAll(Iterable<? extends E> entities) {
-
+        Assert.notNull(entities, "Entities must not be null!");
+        for (E entity : entities) {
+            delete(entity);
+        }
     }
 
-    @Override
-    public void deleteAll() {
-
-    }
-
-    @Override
-    public void update(UpdatePredicate predicate) {
-
-    }
 
     @Override
     public Pagination<E> find(Predicate predicate, Pageable pageable) {
@@ -151,5 +155,11 @@ public abstract class AbstractJpaCrudRepository<E, ID> implements JpaRepository<
     protected QueryHints getQueryHints(CrudMethodMetadata metadata) {
 //        return metadata == null ? QueryHints.NoHints.INSTANCE : DefaultQueryHints.of(entityInformation, metadata);
         return QueryHints.NoHints.INSTANCE;
+    }
+
+
+    private Optional<Object> getEntityId(E entity) {
+        Optional<Field> idField = this.entityMetadata.getIdField();
+        return idField.map(field -> ReflectionUtils.getField(field, entity));
     }
 }

@@ -39,8 +39,6 @@ public class QueryDslRepositoryProcessor extends AbstractProcessor {
 
     private final static String PROPERTIES_FILE_NAME = "repository-codegen.properties";
 
-    private final static String PROPER_SUPER_NAME = "repository.supper.name";
-
     private final static String PROPER_CODE_GENERATOR_NAME = "repository.codegen.name";
 
     private final static String DEFAULT_CODEGEN_CLASS_NAME = "com.wuxp.querydsl.core.codegen.repository.JapRepositoryGenerator";
@@ -146,11 +144,8 @@ public class QueryDslRepositoryProcessor extends AbstractProcessor {
 
     private void injectProperties(Properties properties) {
         RepositoryCodeGenProperties repositoryCodeGenProperties = this.repositoryCodeGenProperties;
-        if (properties.get(PROPER_SUPER_NAME) != null) {
-            repositoryCodeGenProperties.setRepositorySupperClassName(properties.getProperty(PROPER_SUPER_NAME));
-        }
         if (properties.get(PROPER_CODE_GENERATOR_NAME) != null) {
-            repositoryCodeGenProperties.setRepositorySupperClassName(properties.getProperty(PROPER_CODE_GENERATOR_NAME));
+            repositoryCodeGenProperties.setRepositoryCodeGenClassName(properties.getProperty(PROPER_CODE_GENERATOR_NAME));
         } else {
             repositoryCodeGenProperties.setRepositoryCodeGenClassName(DEFAULT_CODEGEN_CLASS_NAME);
         }

@@ -14,13 +14,6 @@ public interface JpaRepository<E, ID> extends PagingAndSortingRepository<E, ID> 
 
 
     /**
-     * update
-     *
-     * @param predicate update predicate
-     */
-    void update(UpdatePredicate predicate);
-
-    /**
      * Flushes all pending changes to the database.
      */
     void flush();
