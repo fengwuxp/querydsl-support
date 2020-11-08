@@ -33,7 +33,7 @@ public class JapRepositoryGenerator implements CodeGenerator {
     public void generate() {
         Filer filer = this.processingEnv.getFiler();
         fileObjects.forEach((key, fileObject) -> {
-            JpaRepositorySourceGenerator sourceGenerator = new JpaRepositorySourceGenerator(key, fileObject);
+            JpaRepositorySourceGenerator sourceGenerator = new JpaRepositorySourceGenerator(key, fileObject, filer);
             CompilationUnit compilationUnit = sourceGenerator.generate();
             if (compilationUnit == null) {
                 return;

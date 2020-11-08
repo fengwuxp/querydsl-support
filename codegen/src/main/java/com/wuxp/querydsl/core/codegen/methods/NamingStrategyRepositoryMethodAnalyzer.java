@@ -96,7 +96,7 @@ public class NamingStrategyRepositoryMethodAnalyzer  extends AbstractRepositoryM
     public boolean supports(MethodDeclaration methodDeclaration) {
         boolean parameterHasOp = methodDeclaration.getParameters().stream().map(parameter -> parameter.getAnnotations().size() > 0).findFirst().orElse(false);
         if (parameterHasOp) {
-            // 方法上存在注解，不支持
+            // 方法参数上存在注解，不支持
             return false;
         }
         return true;

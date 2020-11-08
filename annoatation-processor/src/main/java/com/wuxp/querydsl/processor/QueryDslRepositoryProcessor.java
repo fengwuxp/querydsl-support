@@ -101,7 +101,6 @@ public class QueryDslRepositoryProcessor extends AbstractProcessor {
 
     private FileObject getSourceFileObject(Element element) {
         Elements elementUtils = this.processingEnv.getElementUtils();
-        Filer filer = this.processingEnv.getFiler();
         Messager messager = this.processingEnv.getMessager();
         TypeElement typeElement = (TypeElement) element;
         final String packageName = elementUtils.getPackageOf(typeElement).getQualifiedName().toString();

@@ -10,7 +10,7 @@ import com.wuxp.querydsl.core.codegen.model.RepositoryMethodCodeGenContext;
 public abstract class AbstractRepositoryMethodAnalyzer implements RepositoryMethodAnalyzer {
 
 
-    private final RepositoryMethodCodeGenContext repositoryMethodCodeGenContext;
+    protected final RepositoryMethodCodeGenContext repositoryMethodCodeGenContext;
 
     public AbstractRepositoryMethodAnalyzer(RepositoryMethodCodeGenContext repositoryMethodCodeGenContext) {
         this.repositoryMethodCodeGenContext = repositoryMethodCodeGenContext;
