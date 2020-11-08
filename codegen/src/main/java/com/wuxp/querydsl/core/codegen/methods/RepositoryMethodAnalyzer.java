@@ -25,4 +25,12 @@ public interface RepositoryMethodAnalyzer {
      * @param metadata          方法的元数据信息
      */
     void analysis(MethodDeclaration methodDeclaration, RepositoryMethodMetadata metadata);
+
+
+    /**
+     * 是否支持解析该方法定义
+     * @param methodDeclaration 方法定义
+     * @return <code>true</code>
+     */
+    boolean supports(MethodDeclaration methodDeclaration);
 }

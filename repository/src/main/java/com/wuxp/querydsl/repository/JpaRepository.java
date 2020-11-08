@@ -1,6 +1,5 @@
 package com.wuxp.querydsl.repository;
 
-import com.wuxp.querydsl.core.domain.UpdatePredicate;
 import com.wuxp.querydsl.core.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.Repository;
 

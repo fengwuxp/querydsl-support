@@ -1,12 +1,8 @@
 package com.wuxp.querydsl.repository.jpa;
 
-import com.querydsl.core.types.EntityPath;
 import com.querydsl.core.types.Predicate;
-import com.querydsl.core.types.dsl.EntityPathBase;
-import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.JPQLQueryFactory;
 import com.wuxp.querydsl.core.domain.Pagination;
-import com.wuxp.querydsl.core.domain.UpdatePredicate;
 import com.wuxp.querydsl.core.support.EntityMetadata;
 import com.wuxp.querydsl.repository.JpaRepository;
 import com.wuxp.querydsl.repository.support.JpaEntityMetadata;
@@ -20,7 +16,9 @@ import org.springframework.util.ReflectionUtils;
 
 import javax.persistence.EntityManager;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * @author wuxp

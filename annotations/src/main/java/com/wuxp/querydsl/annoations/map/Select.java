@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 /**
  * 查找的表字段
- * 用于标记在DTO对象上或者 repository的方法返回值上
+ * 用于标记在DTO对象上的字段上或者 repository的方法返回值上
  *
  * @author wuxp
  */

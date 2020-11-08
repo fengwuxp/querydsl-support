@@ -14,4 +14,5 @@ public class GoodsAndTypeInfo {
 
     @Select("")
     private String goodsCategoryName;
+
 }

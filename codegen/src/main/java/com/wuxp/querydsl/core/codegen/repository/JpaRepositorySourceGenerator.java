@@ -13,10 +13,11 @@ import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
-import com.github.javaparser.ast.type.TypeParameter;
 import com.wuxp.querydsl.core.codegen.methods.DefaultJpaRepositoryMethodGenerator;
 import com.wuxp.querydsl.core.codegen.methods.JpaRepositoryMethodGenerator;
+import com.wuxp.querydsl.core.codegen.methods.NamingStrategyRepositoryMethodAnalyzer;
 import com.wuxp.querydsl.core.codegen.methods.RepositoryMethodAnalyzer;
+import com.wuxp.querydsl.core.codegen.model.RepositoryMethodCodeGenContext;
 import com.wuxp.querydsl.core.codegen.model.RepositoryMethodMetadata;
 import com.wuxp.querydsl.core.codegen.soucecode.JavaSourceGenerator;
 import org.springframework.stereotype.Repository;
@@ -24,13 +25,17 @@ import org.springframework.util.Assert;
 
 import javax.tools.FileObject;
 import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 /**
+ * 基于源代码的 jpa repository 生成器
+ *
  * @author wuxp
  */
-public class JapRepositorySourceGenerator implements JavaSourceGenerator {
+public class JpaRepositorySourceGenerator implements JavaSourceGenerator {
 
     /**
      * 默认的超类
@@ -50,44 +55,31 @@ public class JapRepositorySourceGenerator implements JavaSourceGenerator {
 
     protected final FileObject fileObject;
 
-    private String packageName;
-
     private final List<RepositoryMethodAnalyzer> repositoryMethodAnalyzers = new ArrayList<>();
 
     private final JpaRepositoryMethodGenerator jpaRepositoryMethodGenerator;
 
-    public JapRepositorySourceGenerator(String simpleName, FileObject fileObject) {
+    private String packageName;
+
+    private CompilationUnit repositoryInterfaceUnit;
+
+    private RepositoryMethodCodeGenContext repositoryMethodCodeGenContext;
+
+    public JpaRepositorySourceGenerator(String simpleName, FileObject fileObject) {
         this.simpleName = simpleName;
         this.fileObject = fileObject;
         jpaRepositoryMethodGenerator = new DefaultJpaRepositoryMethodGenerator();
+        this.initContext();
+        this.initRepositoryMethodAnalyzers();
     }
+
 
     @Override
     public CompilationUnit generate() {
-        JavaParser javaParser = new JavaParser();
-        ParseResult<CompilationUnit> result;
-        try {
-            result = javaParser.parse(fileObject.openInputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-        if (!result.getResult().isPresent()) {
-            return null;
-        }
-        CompilationUnit repositoryInterfaceUnit = result.getResult().get();
-        Optional<PackageDeclaration> packageDeclaration = repositoryInterfaceUnit.getPackageDeclaration();
-        if (!packageDeclaration.isPresent()) {
-            return null;
-        }
-        String packageName = packageDeclaration.get().getNameAsString();
-        this.packageName = packageName;
 
-        Optional<ClassOrInterfaceDeclaration> repositoryInterfaceOptional = repositoryInterfaceUnit.getInterfaceByName(simpleName);
-        if (!repositoryInterfaceOptional.isPresent()) {
-            return null;
-        }
-        ClassOrInterfaceDeclaration repositoryInterface = repositoryInterfaceOptional.get();
+        RepositoryMethodCodeGenContext repositoryMethodCodeGenContext = this.repositoryMethodCodeGenContext;
+        ClassOrInterfaceDeclaration repositoryInterface = repositoryMethodCodeGenContext.getRepositoryInterface();
+
         CompilationUnit implClass = new CompilationUnit();
         implClass.setPackageDeclaration(packageName);
         final ClassOrInterfaceDeclaration repositoryInterfaceImpl = implClass.addClass(this.getNewSimpleClassName(), com.github.javaparser.ast.Modifier.Keyword.PUBLIC);
@@ -97,10 +89,9 @@ public class JapRepositorySourceGenerator implements JavaSourceGenerator {
         NEED_IMPORTS_CLASS_NAMES.forEach(implClass::addImport);
         String repositoryClassName = String.format("%s.%s", packageName, simpleName);
         repositoryInterfaceImpl.addImplementedType(repositoryClassName);
-        List<TypeParameter> supperTypeParameters = addSupperClass(repositoryInterface, repositoryInterfaceImpl);
-        Assert.notEmpty(supperTypeParameters, "超类上必须填写实体和ID的泛型");
-        setConstructor(repositoryInterfaceImpl, repositoryClassName, supperTypeParameters.get(0).getNameAsString());
+        addSupperClass(repositoryInterfaceImpl);
 
+        setConstructor(repositoryInterfaceImpl, repositoryClassName, repositoryMethodCodeGenContext.getDomainType().getNameAsString());
         repositoryInterfaceImpl.addAnnotation(Repository.class);
         repositoryInterface.getMethods()
                 .stream()
@@ -116,6 +107,7 @@ public class JapRepositorySourceGenerator implements JavaSourceGenerator {
      * 设置实现类的构造函数
      *
      * @param repositoryInterfaceImpl 待生成的实现类
+     * @param repositoryClassName     接口类的全类名
      * @param entitySimpleName        实体类的SimpleName
      */
     private void setConstructor(ClassOrInterfaceDeclaration repositoryInterfaceImpl,
@@ -133,37 +125,13 @@ public class JapRepositorySourceGenerator implements JavaSourceGenerator {
     /**
      * 给实现类添加超类
      *
-     * @param repositoryInterface     接口类
      * @param repositoryInterfaceImpl 待生成的实现类
-     * @return 接口类上的泛型变量
      */
-    private List<TypeParameter> addSupperClass(ClassOrInterfaceDeclaration repositoryInterface,
-                                               ClassOrInterfaceDeclaration repositoryInterfaceImpl) {
-
+    private void addSupperClass(ClassOrInterfaceDeclaration repositoryInterfaceImpl) {
         ClassOrInterfaceType extendClass = new ClassOrInterfaceType();
         extendClass.setName(DEFAULT_SUPPER_REPOSITORY_CLASS);
         repositoryInterfaceImpl.addExtendedType(extendClass);
 
-        // 查找 {@link com.wuxp.querydsl.repository.JpaRepository} 类上的类型变量
-        NodeList<ClassOrInterfaceType> extendedTypes = repositoryInterface.getExtendedTypes();
-        Optional<ClassOrInterfaceType> jpaRepositoryTypeOptional = extendedTypes.stream()
-                .filter(classOrInterfaceType -> DEFAULT_JPA_REPOSITORY_CLASS_SIMPLE_NAME.equals(classOrInterfaceType.getNameAsString()))
-                .findFirst();
-        if (!jpaRepositoryTypeOptional.isPresent()) {
-            return Collections.emptyList();
-        }
-        ClassOrInterfaceType jpaRepositoryType = jpaRepositoryTypeOptional.get();
-        Optional<NodeList<Type>> typeArguments = jpaRepositoryType.getTypeArguments();
-        if (!typeArguments.isPresent()) {
-            return Collections.emptyList();
-        }
-        NodeList<Type> typeNodeList = typeArguments.get();
-        extendClass.setTypeArguments(typeNodeList);
-
-        return typeNodeList.stream().map(type -> {
-            ClassOrInterfaceType classOrInterfaceType = (ClassOrInterfaceType) type;
-            return new TypeParameter(classOrInterfaceType.getNameAsString());
-        }).collect(Collectors.toList());
     }
 
     /**
@@ -177,14 +145,17 @@ public class JapRepositorySourceGenerator implements JavaSourceGenerator {
         MethodDeclaration methodDeclarationImpl = goodsRepositoryImpl.addMethod(methodDeclaration.getName().toString(),
                 modifiers.stream().map(Modifier::getKeyword).toArray(Modifier.Keyword[]::new));
         methodDeclarationImpl.addAndGetAnnotation(Override.class);
-        methodDeclarationImpl.setType(methodDeclaration.getType());
+        Type type = methodDeclaration.getType();
+        methodDeclarationImpl.setType(type);
         NodeList<Parameter> parameters = methodDeclaration.getParameters();
         methodDeclarationImpl.setParameters(parameters);
 
         // 解析方法 生成方法实现的描述元数据
         RepositoryMethodMetadata methodMetadata = new RepositoryMethodMetadata();
         for (RepositoryMethodAnalyzer methodAnalyzer : repositoryMethodAnalyzers) {
-            methodAnalyzer.analysis(methodDeclaration, methodMetadata);
+            if (methodAnalyzer.supports(methodDeclaration)) {
+                methodAnalyzer.analysis(methodDeclaration, methodMetadata);
+            }
         }
         // 移除参数上所有的注解
         parameters.forEach(parameter -> {
@@ -192,6 +163,45 @@ public class JapRepositorySourceGenerator implements JavaSourceGenerator {
         });
         jpaRepositoryMethodGenerator.generate(methodDeclarationImpl, methodMetadata);
 
+    }
+
+    /**
+     * 初始化上下文
+     */
+    private void initContext() {
+        JavaParser javaParser = new JavaParser();
+        ParseResult<CompilationUnit> result;
+        try {
+            result = javaParser.parse(fileObject.openInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        Optional<CompilationUnit> unitOptional = result.getResult();
+        Assert.isTrue(unitOptional.isPresent(), fileObject.getName() + "类的定义有误，没有存在内容");
+        this.repositoryInterfaceUnit = unitOptional.get();
+        Optional<PackageDeclaration> packageDeclaration = repositoryInterfaceUnit.getPackageDeclaration();
+        Assert.isTrue(packageDeclaration.isPresent(), fileObject.getName() + "类的包名定义有误");
+        this.packageName = packageDeclaration.get().getNameAsString();
+
+        Optional<ClassOrInterfaceDeclaration> repositoryInterfaceOptional = repositoryInterfaceUnit.getInterfaceByName(simpleName);
+        Assert.isTrue(repositoryInterfaceOptional.isPresent(), "类：" + simpleName + "未找到");
+        ClassOrInterfaceDeclaration repositoryInterface = repositoryInterfaceOptional.get();
+        // 查找 {@link com.wuxp.querydsl.repository.JpaRepository} 类上的类型变量
+        NodeList<ClassOrInterfaceType> extendedTypes = repositoryInterface.getExtendedTypes();
+        Optional<ClassOrInterfaceType> jpaRepositoryTypeOptional = extendedTypes.stream()
+                .filter(classOrInterfaceType -> DEFAULT_JPA_REPOSITORY_CLASS_SIMPLE_NAME.equals(classOrInterfaceType.getNameAsString()))
+                .findFirst();
+        Assert.isTrue(jpaRepositoryTypeOptional.isPresent(), String.format("未查找到类：%s的超类", simpleName));
+        ClassOrInterfaceType jpaRepositoryType = jpaRepositoryTypeOptional.get();
+        NodeList<Type> typeArguments = jpaRepositoryType.getTypeArguments().orElse(NodeList.nodeList());
+        Assert.isTrue(typeArguments.size() == 2, "类：" + simpleName + "超类上的泛型变量,数量不等于2");
+        this.repositoryMethodCodeGenContext = new RepositoryMethodCodeGenContext((ClassOrInterfaceType) typeArguments.get(0),
+                (ClassOrInterfaceType) typeArguments.get(1), repositoryInterface, jpaRepositoryType);
+    }
+
+    private void initRepositoryMethodAnalyzers() {
+        repositoryMethodAnalyzers.add(new NamingStrategyRepositoryMethodAnalyzer(repositoryMethodCodeGenContext));
     }
 
 

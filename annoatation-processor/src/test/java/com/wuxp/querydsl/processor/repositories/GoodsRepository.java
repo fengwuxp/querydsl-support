@@ -23,4 +23,10 @@ public interface GoodsRepository extends JpaRepository<Goods, Long> {
     @Lock(LockModeType.OPTIMISTIC)
     @Override
     Optional<Goods> findById(Long id);
+
+    Optional<String> selectNameById(Long id);
+
+    int countAllByName(String name);
+
+    Integer selectMarketPriceByName(String name);
 }

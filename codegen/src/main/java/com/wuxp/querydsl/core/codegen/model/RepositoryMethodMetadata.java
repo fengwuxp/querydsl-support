@@ -1,6 +1,7 @@
 package com.wuxp.querydsl.core.codegen.model;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * repository 查询方法的元数据信息
@@ -64,4 +65,74 @@ public class RepositoryMethodMetadata {
      * </pre>
      */
     private List<ColumnMetadata> havingColumns;
+
+    public List<SelectColumnMetadata> getSelects() {
+        return selects;
+    }
+
+    public void setSelects(List<SelectColumnMetadata> selects) {
+        this.selects = selects;
+    }
+
+    public List<LogicalOperationMetadata> getWheres() {
+        return wheres;
+    }
+
+    public void setWheres(List<LogicalOperationMetadata> wheres) {
+        this.wheres = wheres;
+    }
+
+    public List<JoinOperationMetadata> getJoins() {
+        return joins;
+    }
+
+    public void setJoins(List<JoinOperationMetadata> joins) {
+        this.joins = joins;
+    }
+
+    public List<ColumnMetadata> getOrderByColumns() {
+        return orderByColumns;
+    }
+
+    public void setOrderByColumns(List<ColumnMetadata> orderByColumns) {
+        this.orderByColumns = orderByColumns;
+    }
+
+    public List<ColumnMetadata> getGroupByColumns() {
+        return groupByColumns;
+    }
+
+    public void setGroupByColumns(List<ColumnMetadata> groupByColumns) {
+        this.groupByColumns = groupByColumns;
+    }
+
+    public List<ColumnMetadata> getHavingColumns() {
+        return havingColumns;
+    }
+
+    public void setHavingColumns(List<ColumnMetadata> havingColumns) {
+        this.havingColumns = havingColumns;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        RepositoryMethodMetadata that = (RepositoryMethodMetadata) o;
+        return Objects.equals(selects, that.selects) &&
+                Objects.equals(wheres, that.wheres) &&
+                Objects.equals(joins, that.joins) &&
+                Objects.equals(orderByColumns, that.orderByColumns) &&
+                Objects.equals(groupByColumns, that.groupByColumns) &&
+                Objects.equals(havingColumns, that.havingColumns);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(selects, wheres, joins, orderByColumns, groupByColumns, havingColumns);
+    }
 }
